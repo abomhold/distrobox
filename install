@@ -82,6 +82,14 @@ icon_dest_path="${prefix}/share/icons/hicolor"
 completion_bash_dest_path="${prefix}/share/bash-completion/completions/"
 completion_zsh_dest_path="${prefix}/share/zsh/site-functions/"
 
+install_command() {
+	if [ "$(uname)" == "Darwin" ]; then
+		ginstall $@
+	else
+		install $@
+	fi
+}
+
 set -o errexit
 set -o nounset
 # set verbosity
@@ -102,33 +110,23 @@ if [ -e "${curr_dir}/distrobox-enter" ]; then
 		exit 1
 	fi
 	for file in distrobox*; do
-		if ! install -m 0755 "${file}" "${dest_path}"; then
+		if ! install_command -D -m 0755 -t "${dest_path}" "${file}"; then
 			printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
 			exit 1
 		fi
 	done
 	if [ -e "man" ]; then
 		for file in man/man1/*; do
-			install -m 0644 "${file}" "${man_dest_path}"
+			install_command -D -m 0644 -t "${man_dest_path}" "${file}"
 		done
 	fi
 	if [ -e "completions" ]; then
-		for file in completions/bash/*; do
-			install -m 0644 "${file}" "${completion_bash_dest_path}"
+		for file in completions/*; do
+			install_command -D -m 0644 -t "${completion_dest_path}" "${file}"
 		done
 	fi
-	if [ -e "completions" ]; then
-		for file in completions/zsh/*; do
-			install -m 0644 "${file}" "${completion_zsh_dest_path}"
-		done
-	fi
-	if [ -e icons/terminal-distrobox-icon.svg ]; then
-		install -m 0644 icons/terminal-distrobox-icon.svg "${icon_dest_path}/scalable/apps"
-		for sz in 16 22 24 32 36 48 64 72 96 128 256; do
-			install -d "${icon_dest_path}/${sz}x${sz}/apps"
-			install -m 0644 icons/hicolor/"${sz}x${sz}"/apps/terminal-distrobox-icon.png \
-				"${icon_dest_path}/${sz}x${sz}/apps"
-		done
+	if [ -e terminal-distrobox-icon.png ]; then
+		install_command -D -m 0644 -t "${icon_dest_path}" terminal-distrobox-icon.png
 	fi
 else
 	printf >&2 "\033[1;31m Checking dependencies...\n\033[0m"
@@ -174,34 +172,24 @@ else
 		exit 1
 	fi
 	for file in "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/distrobox*; do
-		if ! install -m 0755 "${file}" "${dest_path}"; then
+		if ! install_command -D -m 0755 -t "${dest_path}" "${file}"; then
 			printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
 			exit 1
 		fi
 	done
 	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')/man/" ]; then
 		for file in "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/man/man1/*; do
-			install -m 0644 "${file}" "${man_dest_path}"
+			install_command -D -m 0644 -t "${man_dest_path}" "${file}"
 		done
 	fi
-	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')/completions/bash/" ]; then
-		for file in "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/completions/bash/*; do
-			install -m 0644 "${file}" "${completion_bash_dest_path}"
+	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')/completions/" ]; then
+		for file in "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/completions/*; do
+			install_command -D -m 0644 -t "${completion_dest_path}" "${file}"
 		done
 	fi
-	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')/completions/zsh/" ]; then
-		for file in "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/completions/zsh/*; do
-			install -m 0644 "${file}" "${completion_zsh_dest_path}"
-		done
-	fi
-	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/icons/terminal-distrobox-icon.svg ]; then
-		install -m 0644 "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/icons/terminal-distrobox-icon.svg \
-			"${icon_dest_path}/scalable/apps"
-		for sz in 16 22 24 32 36 48 64 72 96 128 256; do
-			install -d "${icon_dest_path}/${sz}x${sz}/apps"
-			install -m 0644 "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')/icons/hicolor/${sz}x${sz}/apps/terminal-distrobox-icon.png" \
-				"${icon_dest_path}/${sz}x${sz}/apps"
-		done
+	if [ -e "distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/terminal-distrobox-icon.png ]; then
+		install_command -D -m 0644 -t "${icon_dest_path}" \
+			"distrobox-$(echo "${release_name}" | sed 's/.tar.gz//g')"/terminal-distrobox-icon.png
 	fi
 
 	# securely delete unneeded files
